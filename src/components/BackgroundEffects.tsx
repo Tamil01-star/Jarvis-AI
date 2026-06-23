@@ -92,8 +92,7 @@ export const BackgroundEffects: React.FC = () => {
       tick++;
 
       /* ---- clear ---- */
-      ctx.fillStyle = 'rgba(3,5,12,0.88)';
-      ctx.fillRect(0, 0, W, H);
+      ctx.clearRect(0, 0, W, H);
 
       /* ---- hex grid ---- */
       ctx.save();

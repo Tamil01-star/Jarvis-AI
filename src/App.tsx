@@ -57,7 +57,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden bg-cyber-bg text-white font-sans">
+    <div className="relative w-full min-h-screen overflow-hidden text-white font-sans" style={{ background: 'transparent' }}>
       {/* Cinematic fullscreen video background — always mounted so it preloads */}
       <VideoBackground
         ref={videoRef}

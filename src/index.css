@@ -8,7 +8,7 @@
     box-sizing: border-box;
   }
   body {
-    background-color: #03050c;
+    background-color: transparent;
     color: #e2e8f0;
     font-family: 'Inter', sans-serif;
     overflow: hidden;

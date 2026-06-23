@@ -193,10 +193,11 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, onVideoS
   /* ────────────────── RENDER ────────────────── */
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden hex-bg"
-      style={{
-        background: phase === 'launching' ? 'transparent' : '#03050c',
-        transition: 'background-color 0.8s ease',
-      }}>
+      style={{ background: 'transparent' }}>
+
+      {/* Semi-transparent dark veil — fades away during launching so video is fully visible */}
+      <div className="absolute inset-0 transition-opacity duration-1000 pointer-events-none"
+        style={{ background: 'rgba(3,5,12,0.82)', opacity: phase === 'launching' ? 0 : 1 }} />
 
       {/* CRT scanline overlay */}
       <div className="absolute inset-0 scanline pointer-events-none opacity-25 z-10" />
