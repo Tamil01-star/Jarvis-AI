@@ -69,8 +69,13 @@ export const fetchLLMResponse = async (
     }
   }
 
+  // If a real LLM is selected but no key is provided, return an explicit alert
+  if (provider !== 'offline' && !finalApiKey) {
+    return `[SYSTEM ALERT] Sir, the ${provider.toUpperCase()} cognitive node is selected, but the API key is missing. Please configure VITE_${provider.toUpperCase()}_API_KEY in the .env file.`;
+  }
+
   // 1. Offline Mode (Local keyword matcher / default answers)
-  if (provider === 'offline' || !finalApiKey) {
+  if (provider === 'offline') {
     // Artificial latency for realism
     await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 800));
 
