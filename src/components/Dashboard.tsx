@@ -124,7 +124,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
         {/* ================================================
             CENTER COLUMN
         ================================================ */}
-        <div className="lg:col-span-6 flex flex-col items-center space-y-4">
+        <div className="lg:col-span-6 flex flex-col items-center space-y-3 h-full">
 
           {/* Top telemetry strip */}
           <div className="w-full flex items-center justify-between px-2 gap-2 flex-wrap">
@@ -135,7 +135,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
           </div>
 
           {/* AI Core display */}
-          <div className="flex-1 flex items-center justify-center relative w-full">
+          <div className="flex-1 min-h-[200px] flex items-center justify-center relative w-full">
             {/* Background image (arc reactor) as faint overlay */}
             <div
               className="absolute w-48 h-48 rounded-full opacity-5 pointer-events-none"
@@ -150,41 +150,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
             />
           </div>
 
-          {/* Arc Reactor power strip */}
-          <div className="w-full glass-panel rounded-md px-4 py-3 flex items-center justify-between border border-cyan-500/10">
-            <div className="flex items-center space-x-3">
-              <ArcReactor power={arcPower} />
-              <div className="font-sharetech">
-                <div className="text-[10px] text-white tracking-[0.15em] font-bold uppercase">Arc Reactor Grid</div>
-                <div className="text-[7px] text-gray-500 tracking-widest">POWER MATRIX v4.02 — CAPACITORS FULL</div>
-                <div className="mt-1.5 w-44 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: 'linear-gradient(90deg, #0066ff, #00f0ff)' }}
-                    animate={{ width: `${arcPower}%` }}
-                    transition={{ duration: 1 }}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="text-right font-sharetech">
-              <div className="text-[7px] text-gray-500 uppercase tracking-widest">Energy Output</div>
-              <div className="font-orbitron text-lg font-bold text-cyan-300 text-glow-cyan">
-                {(arcPower * 10.4).toFixed(0)} <span className="text-[10px]">MW</span>
-              </div>
-              <div className="flex items-center justify-end space-x-1 mt-0.5">
-                <Battery className="w-3 h-3 text-green-400" />
-                <span className="text-[8px] text-green-400 font-bold">OPTIMAL</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ================================================
-            RIGHT COLUMN
-        ================================================ */}
-        <div className="lg:col-span-3 flex flex-col space-y-3 overflow-y-auto custom-scrollbar">
-          <HologramPanel title="OS Cognition Console" subtitle="JARVIS_COMMS" className="flex-[2] min-h-0" showHeaderScan={scanning}>
+          {/* Center Chat Console - Made Large and Prominent */}
+          <HologramPanel title="OS Cognition Console" subtitle="JARVIS_COMMS" className="w-full h-[40vh] flex-shrink-0" showHeaderScan={scanning}>
             <ChatWindow
               nickname={customNickname}
               userAvatar={userAvatar}
@@ -196,8 +163,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
             />
           </HologramPanel>
 
+        </div>
+
+        {/* ================================================
+            RIGHT COLUMN
+        ================================================ */}
+        <div className="lg:col-span-3 flex flex-col space-y-3 overflow-y-auto custom-scrollbar">
+          
           <HologramPanel title="System Parameters" subtitle="CONFIG_VARS" className="flex-shrink-0" showHeaderScan={scanning}>
-          <SettingsPanel
+            <SettingsPanel
               provider={provider}
               setProvider={setProvider}
               selectedModel={selectedModel}
@@ -207,6 +181,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
               videoRef={videoRef}
             />
           </HologramPanel>
+
+          {/* Arc Reactor power strip moved to right column to balance layout */}
+          <div className="w-full glass-panel rounded-md px-4 py-3 flex flex-col space-y-3 border border-cyan-500/10 mt-auto">
+            <div className="flex items-center space-x-3">
+              <ArcReactor power={arcPower} />
+              <div className="font-sharetech">
+                <div className="text-[10px] text-white tracking-[0.15em] font-bold uppercase">Arc Reactor Grid</div>
+                <div className="text-[7px] text-gray-500 tracking-widest">POWER MATRIX v4.02</div>
+                <div className="mt-1.5 w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ background: 'linear-gradient(90deg, #0066ff, #00f0ff)' }}
+                    animate={{ width: `${arcPower}%` }}
+                    transition={{ duration: 1 }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="text-right font-sharetech flex items-end justify-between">
+              <div className="flex items-center space-x-1 mb-1">
+                <Battery className="w-3 h-3 text-green-400" />
+                <span className="text-[8px] text-green-400 font-bold">OPTIMAL</span>
+              </div>
+              <div>
+                <div className="text-[7px] text-gray-500 uppercase tracking-widest">Energy Output</div>
+                <div className="font-orbitron text-lg font-bold text-cyan-300 text-glow-cyan leading-none">
+                  {(arcPower * 10.4).toFixed(0)} <span className="text-[10px]">MW</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
         </div>
 
       </main>
