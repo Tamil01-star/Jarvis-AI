@@ -26,21 +26,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 }) => {
   const { playClick, playSuccess, setMasterVolume } = useAudioSynth();
 
-  const [geminiKey, setGeminiKey] = useState('');
-  const [openaiKey, setOpenaiKey] = useState('');
-  
-  const [showGeminiKey, setShowGeminiKey] = useState(false);
-  const [showOpenaiKey, setShowOpenaiKey] = useState(false);
-
   const [volume, setVolume] = useState(30);
 
-  // Load API keys from localStorage on mount
+  // Load volume from localStorage on mount
   useEffect(() => {
-    const savedGeminiKey = localStorage.getItem('jarvis_gemini_key') || '';
-    const savedOpenaiKey = localStorage.getItem('jarvis_openai_key') || '';
-    setGeminiKey(savedGeminiKey);
-    setOpenaiKey(savedOpenaiKey);
-
     const savedVolume = localStorage.getItem('jarvis_volume');
     if (savedVolume) {
       const vol = parseInt(savedVolume);
@@ -48,13 +37,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       setMasterVolume(vol / 100);
     }
   }, []);
-
-  const handleSaveKeys = () => {
-    localStorage.setItem('jarvis_gemini_key', geminiKey);
-    localStorage.setItem('jarvis_openai_key', openaiKey);
-    playSuccess();
-    alert("Sir, API credentials saved securely in local storage.");
-  };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const vol = parseInt(e.target.value);
@@ -167,71 +149,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
       )}
 
-      {/* Secure API Key Entries */}
-      {provider !== 'offline' && (
-        <div className="flex flex-col space-y-3.5 border-t border-cyber-cyan/10 pt-3">
-          {provider === 'gemini' && (
-            <div className="flex flex-col space-y-1">
-              <label className="text-[10px] text-gray-500 uppercase tracking-widest flex items-center">
-                <Lock className="w-3 h-3 mr-1" /> GEMINI API KEY
-              </label>
-              <div className="flex bg-black/40 border border-cyber-cyan/20 rounded overflow-hidden">
-                <input
-                  type={showGeminiKey ? 'text' : 'password'}
-                  value={geminiKey}
-                  onChange={(e) => setGeminiKey(e.target.value)}
-                  placeholder="Paste AI key..."
-                  className="flex-1 bg-transparent px-2.5 py-1.5 text-white text-[10px] focus:outline-none select-text"
-                />
-                <button
-                  onClick={() => {
-                    playClick();
-                    setShowGeminiKey(!showGeminiKey);
-                  }}
-                  className="px-2 text-cyber-cyan/50 hover:text-cyber-cyan transition-colors"
-                >
-                  {showGeminiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-          )}
 
-          {provider === 'openai' && (
-            <div className="flex flex-col space-y-1">
-              <label className="text-[10px] text-gray-500 uppercase tracking-widest flex items-center">
-                <Lock className="w-3 h-3 mr-1" /> OPENAI API KEY
-              </label>
-              <div className="flex bg-black/40 border border-cyber-cyan/20 rounded overflow-hidden">
-                <input
-                  type={showOpenaiKey ? 'text' : 'password'}
-                  value={openaiKey}
-                  onChange={(e) => setOpenaiKey(e.target.value)}
-                  placeholder="Paste sk-..."
-                  className="flex-1 bg-transparent px-2.5 py-1.5 text-white text-[10px] focus:outline-none select-text"
-                />
-                <button
-                  onClick={() => {
-                    playClick();
-                    setShowOpenaiKey(!showOpenaiKey);
-                  }}
-                  className="px-2 text-cyber-cyan/50 hover:text-cyber-cyan transition-colors"
-                >
-                  {showOpenaiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Save button */}
-          <button
-            onClick={handleSaveKeys}
-            className="flex items-center justify-center space-x-1.5 py-2 px-3 bg-cyber-cyan/15 border border-cyber-cyan/40 hover:bg-cyber-cyan/25 hover:border-cyber-cyan text-cyber-cyan hover:text-white rounded transition-all tracking-wider font-bold shadow-hologram"
-          >
-            <Save className="w-3.5 h-3.5" />
-            <span>SAVE CREDENTIALS</span>
-          </button>
-        </div>
-      )}
 
       {/* Offline Mode Note */}
       {provider === 'offline' && (
