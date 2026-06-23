@@ -1,68 +1,105 @@
-import React, { useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, forwardRef, useImperativeHandle, useState } from 'react';
 
 export interface VideoBackgroundHandle {
-  play: () => void;
+  playIntro: (volume: number) => void;
+  startLoopSilent: () => void;
   setVolume: (v: number) => void;
 }
 
-export const VideoBackground = forwardRef<VideoBackgroundHandle>((_, ref) => {
+interface VideoBackgroundProps {
+  mode: 'intro' | 'background';
+  onEnded?: () => void;
+}
+
+export const VideoBackground = forwardRef<VideoBackgroundHandle, VideoBackgroundProps>(({ mode, onEnded }, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentVolume, setCurrentVolume] = useState(0.3);
 
   useImperativeHandle(ref, () => ({
-    play: () => {
+    playIntro: (volume: number) => {
       const video = videoRef.current;
       if (!video) return;
-      // Start muted to guarantee browser allows play, then unmute
+      video.loop = false;
       video.muted = false;
-      video.volume = 0.25;
-      video.play().catch(() => {
-        // Fallback: play muted (autoplay policy)
-        if (videoRef.current) {
-          videoRef.current.muted = true;
-          videoRef.current.play().catch(() => {});
-        }
+      const targetVol = Math.max(0, Math.min(1, volume));
+      video.volume = targetVol;
+      setCurrentVolume(targetVol);
+      
+      video.currentTime = 0;
+      video.play().catch((err) => {
+        console.warn("Autoplay blocked or play failed:", err);
+        // Fallback: play muted
+        video.muted = true;
+        video.play().catch(() => {});
       });
     },
+    startLoopSilent: () => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.loop = true;
+      video.muted = true;
+      video.play().catch(() => {});
+    },
     setVolume: (v: number) => {
-      if (videoRef.current) {
-        videoRef.current.volume = Math.max(0, Math.min(1, v));
-        videoRef.current.muted = v === 0;
+      const video = videoRef.current;
+      if (video) {
+        const targetVol = Math.max(0, Math.min(1, v));
+        setCurrentVolume(targetVol);
+        if (mode === 'intro') {
+          video.volume = targetVol;
+          video.muted = targetVol === 0;
+        }
       }
     },
   }));
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-black">
       <video
         ref={videoRef}
         src="/jarvis_animation.mp4"
-        loop
         playsInline
         muted
         preload="auto"
+        onEnded={onEnded}
         className="absolute inset-0 w-full h-full object-cover"
-        style={{
-          opacity: 0.28,
-          filter: 'hue-rotate(185deg) saturate(1.4) brightness(0.55)',
-        }}
+        style={
+          mode === 'intro'
+            ? {
+                opacity: 1.0,
+                filter: 'none',
+                transition: 'opacity 1s ease, filter 1s ease',
+              }
+            : {
+                opacity: 0.22,
+                filter: 'hue-rotate(185deg) saturate(1.4) brightness(0.55)',
+                transition: 'opacity 1s ease, filter 1s ease',
+              }
+        }
       />
-      {/* Deep dark overlay — keeps holographic UI readable */}
-      <div
-        className="absolute inset-0"
-        style={{ background: 'rgba(3,5,12,0.60)' }}
-      />
-      {/* Subtle cyan radial tint at centre */}
-      <div
-        className="absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,240,255,0.04) 0%, transparent 70%)' }}
-      />
-      {/* Bottom vignette so footer panels don't fight the video */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-40"
-        style={{ background: 'linear-gradient(to top, rgba(3,5,12,0.7) 0%, transparent 100%)' }}
-      />
+      {/* Cinematic intro doesn't have overlays, only background mode does */}
+      {mode === 'background' && (
+        <>
+          {/* Deep dark overlay — keeps holographic UI readable */}
+          <div
+            className="absolute inset-0 transition-opacity duration-1000"
+            style={{ background: 'rgba(3,5,12,0.60)' }}
+          />
+          {/* Subtle cyan radial tint at centre */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,240,255,0.04) 0%, transparent 70%)' }}
+          />
+          {/* Bottom vignette so footer panels don't fight the video */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-40"
+            style={{ background: 'linear-gradient(to top, rgba(3,5,12,0.7) 0%, transparent 100%)' }}
+          />
+        </>
+      )}
     </div>
   );
 });
 
 VideoBackground.displayName = 'VideoBackground';
+

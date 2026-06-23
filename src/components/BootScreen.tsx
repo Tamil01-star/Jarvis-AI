@@ -5,7 +5,7 @@ import { useAudioSynth } from '../hooks/useAudioSynth';
 
 interface BootScreenProps {
   onBootComplete: (nickname: string, userAvatar: string | null) => void;
-  onVideoStart?: () => void;
+  onVideoStart?: (nickname: string, userAvatar: string | null) => void;
 }
 
 const BOOT_LOGS = [
@@ -185,16 +185,18 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, onVideoS
     if (!nickname.trim()) { setNicknameError(true); playWarning(); return; }
     setNicknameError(false);
     // Start the cinematic video inside the click handler so browser allows audio
-    onVideoStart?.();
+    onVideoStart?.(nickname.trim(), googleUser?.avatar || null);
     playSystemBoot();
     setPhase('launching');
-    setTimeout(() => onBootComplete(nickname.trim(), googleUser?.avatar || null), 2800);
   };
 
   /* ────────────────── RENDER ────────────────── */
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden hex-bg"
-      style={{ background: '#03050c' }}>
+      style={{
+        background: phase === 'launching' ? 'transparent' : '#03050c',
+        transition: 'background-color 0.8s ease',
+      }}>
 
       {/* CRT scanline overlay */}
       <div className="absolute inset-0 scanline pointer-events-none opacity-25 z-10" />

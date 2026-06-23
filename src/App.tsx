@@ -9,6 +9,10 @@ export const App: React.FC = () => {
   const [nickname, setNickname] = useState('');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
+  // Store user info during cinematic playback so we can sign in when the video ends
+  const [pendingBootInfo, setPendingBootInfo] = useState<{ name: string; avatar: string | null } | null>(null);
+  const [videoMode, setVideoMode] = useState<'intro' | 'background'>('intro');
+
   // Ref to the cinematic video so we can start it from within a user-gesture callback
   const videoRef = useRef<VideoBackgroundHandle>(null);
 
@@ -22,8 +26,20 @@ export const App: React.FC = () => {
 
   // Called by BootScreen's "INITIALIZE JARVIS OS" button — INSIDE the click handler
   // so the browser allows unmuted video playback.
-  const handleVideoStart = () => {
-    videoRef.current?.play();
+  const handleVideoStart = (name: string, avatar: string | null) => {
+    setPendingBootInfo({ name, avatar });
+    setVideoMode('intro');
+    const savedVolume = localStorage.getItem('jarvis_volume');
+    const vol = savedVolume ? parseInt(savedVolume) / 100 : 0.3;
+    videoRef.current?.playIntro(vol);
+  };
+
+  const handleVideoEnded = () => {
+    setVideoMode('background');
+    videoRef.current?.startLoopSilent();
+    if (pendingBootInfo) {
+      handleBootComplete(pendingBootInfo.name, pendingBootInfo.avatar);
+    }
   };
 
   const handleBootComplete = (name: string, avatar: string | null) => {
@@ -36,12 +52,18 @@ export const App: React.FC = () => {
   const handleShutdown = () => {
     setBooted(false);
     setUserAvatar(null);
+    setPendingBootInfo(null);
+    setVideoMode('intro');
   };
 
   return (
     <div className="relative w-full min-h-screen overflow-hidden bg-cyber-bg text-white font-sans">
       {/* Cinematic fullscreen video background — always mounted so it preloads */}
-      <VideoBackground ref={videoRef} />
+      <VideoBackground
+        ref={videoRef}
+        mode={videoMode}
+        onEnded={handleVideoEnded}
+      />
 
       {/* Immersive 60FPS Canvas overlay (grid, mouse trails, sonar sweeps) on top of video */}
       <BackgroundEffects />
