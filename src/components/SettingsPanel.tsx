@@ -38,26 +38,41 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   }, []);
 
+  const syncSettingsToBackend = async (newProvider: string, newModel: string, newVolume: number) => {
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nickname,
+          provider: newProvider,
+          selected_model: newModel,
+          volume: newVolume
+        })
+      });
+    } catch (e) {
+      console.warn("Failed to sync settings to cloud:", e);
+    }
+  };
+
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const vol = parseInt(e.target.value);
     setVolume(vol);
     setMasterVolume(vol / 100);
-    // Also sync the cinematic video audio
     videoRef?.current?.setVolume(vol / 100);
     localStorage.setItem('jarvis_volume', vol.toString());
+    syncSettingsToBackend(provider, selectedModel, vol);
   };
 
-  // Adjust model default choices when provider shifts
   const handleProviderChange = (p: 'gemini' | 'openai' | 'offline') => {
     playClick();
     setProvider(p);
-    if (p === 'gemini') {
-      setSelectedModel('gemini-1.5-flash');
-    } else if (p === 'openai') {
-      setSelectedModel('gpt-4o');
-    } else {
-      setSelectedModel('offline-core');
-    }
+    let defaultModel = 'offline-core';
+    if (p === 'gemini') defaultModel = 'gemini-1.5-flash';
+    else if (p === 'openai') defaultModel = 'gpt-4o';
+    
+    setSelectedModel(defaultModel);
+    syncSettingsToBackend(p, defaultModel, volume);
   };
 
   return (

@@ -49,6 +49,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Fetch chat history from the database on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`/api/history?nickname=${encodeURIComponent(nickname || 'Sir')}`);
+        if (res.ok) {
+          const dbHistory = await res.json();
+          if (dbHistory.length > 0) {
+            setMessages(dbHistory);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load history from cloud:', e);
+      }
+    };
+    fetchHistory();
+  }, [nickname]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);

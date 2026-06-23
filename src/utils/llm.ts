@@ -55,132 +55,46 @@ export const fetchLLMResponse = async (
   history: MessageItem[],
   provider: 'gemini' | 'openai' | 'offline',
   model: string,
-  apiKey: string
+  nickname: string
 ): Promise<string> => {
-  const queryLower = message.toLowerCase();
-
-  // Retrieve API keys, preferring localStorage, fallback to .env variables
-  let finalApiKey = apiKey;
-  if (!finalApiKey) {
-    if (provider === 'gemini') {
-      finalApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-    } else if (provider === 'openai') {
-      finalApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
-    }
-  }
-
-  // If a real LLM is selected but no key is provided, return an explicit alert
-  if (provider !== 'offline' && !finalApiKey) {
-    return `[SYSTEM ALERT] Sir, the ${provider.toUpperCase()} cognitive node is selected, but the API key is missing. Please configure VITE_${provider.toUpperCase()}_API_KEY in the .env file.`;
-  }
-
-  // 1. Offline Mode (Local keyword matcher / default answers)
+  // Offline Mode processing (still local for immediate speed if strictly offline)
   if (provider === 'offline') {
-    // Artificial latency for realism
+    const queryLower = message.toLowerCase();
     await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 800));
 
-    // Try keyword matching
     for (const item of keywordResponses) {
       if (item.keywords.some(keyword => queryLower.includes(keyword))) {
         return item.response;
       }
     }
-
-    // Default responses
     const randomIndex = Math.floor(Math.random() * offlineJarvisResponses.length);
     return offlineJarvisResponses[randomIndex];
   }
 
-  // 2. OpenAI Integration
-  if (provider === 'openai') {
-    try {
-      const messages = [
-        {
-          role: "system",
-          content: "You are JARVIS, Tony Stark's premium holographic AI operating system. Speak with a refined, helpful, and highly intelligent tone, addressing the user as 'sir' (or by their name if provided). Keep responses concise, scientific, and slightly witty, fitting the Iron Man/Stark Industries style. Do not write extremely long essays; keep it formatted in a sleek, robotic, structured manner."
-        },
-        ...history.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content
-        })),
-        { role: 'user', content: message }
-      ];
+  // Call the backend API for real LLM requests
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        nickname: nickname || 'Sir',
+        message,
+        history,
+        provider,
+        selectedModel: model
+      })
+    });
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${finalApiKey}`
-        },
-        body: JSON.stringify({
-          model: model || "gpt-4o",
-          messages: messages,
-          max_tokens: 400
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `HTTP error ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.choices[0].message.content;
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-      console.error("OpenAI Request failed:", e);
-      return `[SYSTEM ERROR] Sir, connection to OpenAI nodes failed: ${errorMessage}. Reverting to local fallback core.`;
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
     }
+
+    const data = await response.json();
+    return data.reply;
+  } catch (error) {
+    console.error("Backend request failed:", error);
+    return `[SYSTEM ERROR] Sir, connection to the backend node failed. Reverting to local fallback core.`;
   }
-
-  // 3. Gemini Integration
-  if (provider === 'gemini') {
-    try {
-      // Format history, ensuring we skip the hardcoded first message if needed or just let it alternate
-      // In Jarvis, the first msg is usually assistant ("Systems online..."), so history starts with 'model', then 'user', etc.
-      const contents = [
-        ...history.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.content }]
-        })),
-        {
-          role: 'user',
-          parts: [{ text: message }]
-        }
-      ];
-
-      const modelName = model || "gemini-1.5-flash";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalApiKey}`;
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: "You are JARVIS, the premium AI operating system for Tony Stark. Speak with a refined, high-intelligence, British-accented assistant vibe. Always call the user 'sir' or by their configured nickname. Keep replies crisp, structured, and informative. Reference Stark Industries tech and sensors if relevant." }]
-          },
-          contents: contents,
-          generationConfig: {
-            maxOutputTokens: 400
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `HTTP error ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.candidates[0].content.parts[0].text;
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-      console.error("Gemini Request failed:", e);
-      return `[SYSTEM ERROR] Sir, connection to Gemini nodes failed: ${errorMessage}. Reverting to local fallback core.`;
-    }
-  }
-
-  return "Offline. Ready to receive commands.";
 };
