@@ -121,7 +121,7 @@ app.post('/api/chat', async (req, res) => {
         aiResponse = data.candidates[0].content.parts[0].text;
       } else {
         const err = await gRes.json();
-        aiResponse = \`[SYSTEM ERROR] \${err.error?.message}\`;
+        aiResponse = `[SYSTEM ERROR] ${err.error?.message}`;
       }
     } else if (provider === 'openai') {
       // OpenAI API Call
@@ -137,7 +137,7 @@ app.post('/api/chat', async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": \`Bearer \${finalApiKey}\`
+          "Authorization": `Bearer ${finalApiKey}`
         },
         body: JSON.stringify({
           model: selectedModel || "gpt-4o",
@@ -150,7 +150,7 @@ app.post('/api/chat', async (req, res) => {
         aiResponse = data.choices[0].message.content;
       } else {
         const err = await oRes.json();
-        aiResponse = \`[SYSTEM ERROR] \${err.error?.message}\`;
+        aiResponse = `[SYSTEM ERROR] ${err.error?.message}`;
       }
     }
 
@@ -165,4 +165,4 @@ app.post('/api/chat', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(\`Server running on port \${PORT}\`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
