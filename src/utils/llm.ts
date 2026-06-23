@@ -59,8 +59,18 @@ export const fetchLLMResponse = async (
 ): Promise<string> => {
   const queryLower = message.toLowerCase();
 
+  // Retrieve API keys, preferring localStorage, fallback to .env variables
+  let finalApiKey = apiKey;
+  if (!finalApiKey) {
+    if (provider === 'gemini') {
+      finalApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+    } else if (provider === 'openai') {
+      finalApiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
+    }
+  }
+
   // 1. Offline Mode (Local keyword matcher / default answers)
-  if (provider === 'offline' || !apiKey) {
+  if (provider === 'offline' || !finalApiKey) {
     // Artificial latency for realism
     await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 800));
 
@@ -95,7 +105,7 @@ export const fetchLLMResponse = async (
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Authorization": `Bearer ${finalApiKey}`
         },
         body: JSON.stringify({
           model: model || "gpt-4o",
@@ -143,7 +153,7 @@ export const fetchLLMResponse = async (
       }));
 
       const modelName = model || "gemini-1.5-flash";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalApiKey}`;
 
       const response = await fetch(url, {
         method: "POST",
