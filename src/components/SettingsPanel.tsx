@@ -156,7 +156,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <div className="bg-cyber-cyan/5 border border-cyber-cyan/10 p-2.5 rounded text-[9px] text-cyber-cyan/60 flex items-start space-x-1.5 leading-relaxed">
           <HelpCircle className="w-5 h-5 text-cyber-cyan flex-shrink-0 mt-0.5" />
           <span>
-            Offline fallback core loaded. JARVIS uses built-in diagnostic and response maps. To communicate with real LLMs, switch to OpenAI or Gemini mode and input your API keys.
+            Offline fallback core loaded. JARVIS uses built-in diagnostic and response maps. To communicate with real LLMs, switch to OpenAI or Gemini mode and ensure your API keys are set in the .env file.
           </span>
         </div>
       )}
