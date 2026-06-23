@@ -13,7 +13,6 @@ export class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error('Caught:', error, errorInfo);
     this.setState({ info: errorInfo });
-    fetch('/JARVIS_CRASH_REPORT/' + encodeURIComponent(error.message + ' | ' + errorInfo.componentStack.split('\n')[1]));
   }
 
   render() {
@@ -24,9 +23,11 @@ export class ErrorBoundary extends React.Component {
           <pre style={{ whiteSpace: 'pre-wrap', marginTop: 20 }}>
             {this.state.error?.toString()}
           </pre>
-          <pre style={{ whiteSpace: 'pre-wrap', marginTop: 20, color: '#aaa' }}>
-            {this.state.info?.componentStack}
-          </pre>
+          {this.state.info && (
+            <pre style={{ whiteSpace: 'pre-wrap', marginTop: 20, color: '#aaa' }}>
+              {this.state.info.componentStack}
+            </pre>
+          )}
         </div>
       );
     }

@@ -54,7 +54,8 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, onVideoS
     let idx = 0;
     const step = () => {
       if (idx < BOOT_LOGS.length) {
-        setLogs(p => [...p, BOOT_LOGS[idx]]);
+        const currentLog = BOOT_LOGS[idx];
+        setLogs(p => [...p, currentLog]);
         setLoadPct(Math.round(((idx + 1) / BOOT_LOGS.length) * 100));
         if (idx < BOOT_LOGS.length - 1) {
           playBeep();
@@ -244,7 +245,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, onVideoS
                   <motion.div key={i}
                     initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.2 }}
-                    className={`leading-relaxed ${l.startsWith('▓') ? 'text-cyan-300 font-bold text-glow-cyan' : 'text-cyan-500/75'}`}>
+                    className={`leading-relaxed ${l && l.startsWith('▓') ? 'text-cyan-300 font-bold text-glow-cyan' : 'text-cyan-500/75'}`}>
                     <span className="text-gray-600 mr-1.5 text-[8px]">[{String(i + 1).padStart(2, '0')}]</span>
                     {l}
                   </motion.div>
