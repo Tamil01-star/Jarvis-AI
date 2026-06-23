@@ -131,11 +131,9 @@ export const fetchLLMResponse = async (
   // 3. Gemini Integration
   if (provider === 'gemini') {
     try {
-      const formattedHistory = [
-        {
-          role: 'user',
-          parts: [{ text: "System prompt: You are JARVIS, the premium AI operating system for Tony Stark. Speak with a refined, high-intelligence, British-accented assistant vibe. Always call the user 'sir' or by their configured nickname. Keep replies crisp, structured, and informative. Reference Stark Industries tech and sensors if relevant." }]
-        },
+      // Format history, ensuring we skip the hardcoded first message if needed or just let it alternate
+      // In Jarvis, the first msg is usually assistant ("Systems online..."), so history starts with 'model', then 'user', etc.
+      const contents = [
         ...history.map(msg => ({
           role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.content }]
@@ -146,12 +144,6 @@ export const fetchLLMResponse = async (
         }
       ];
 
-      // Format role name since Gemini API expects 'model' instead of 'assistant'
-      const contents = formattedHistory.map(h => ({
-        role: h.role,
-        parts: h.parts
-      }));
-
       const modelName = model || "gemini-1.5-flash";
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalApiKey}`;
 
@@ -161,6 +153,9 @@ export const fetchLLMResponse = async (
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: "You are JARVIS, the premium AI operating system for Tony Stark. Speak with a refined, high-intelligence, British-accented assistant vibe. Always call the user 'sir' or by their configured nickname. Keep replies crisp, structured, and informative. Reference Stark Industries tech and sensors if relevant." }]
+          },
           contents: contents,
           generationConfig: {
             maxOutputTokens: 400

@@ -39,107 +39,89 @@ export const AICore: React.FC<AICoreProps> = ({ speechState, onClick }) => {
       />
 
       {/* ---- SVG ring system ---- */}
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 260 260">
-        {/* Outermost dashed ring — slowest CW */}
-        <motion.circle cx="130" cy="130" r="120" fill="none"
-          stroke={cfg.ring} strokeWidth="0.7" strokeDasharray="30 8 5 8" opacity="0.22"
+      <svg className="absolute inset-0 w-full h-full drop-shadow-lg" viewBox="0 0 260 260">
+        {/* Outermost tech ring */}
+        <motion.circle cx="130" cy="130" r="124" fill="none"
+          stroke={cfg.ring} strokeWidth="2" strokeDasharray="6 4 12 4 4 4" opacity="0.3"
           animate={{ rotate: 360 }} transition={{ duration: cfg.speed[0], repeat: Infinity, ease: 'linear' }}
           style={{ originX: '130px', originY: '130px' }}
         />
-        {/* Tick-marks ring — CCW */}
-        <motion.circle cx="130" cy="130" r="108" fill="none"
-          stroke={cfg.ring} strokeWidth="1.5" strokeDasharray="2 7" opacity="0.30"
-          animate={{ rotate: -360 }} transition={{ duration: cfg.speed[0] * 0.7, repeat: Infinity, ease: 'linear' }}
+        {/* Thick segmented frame ring */}
+        <motion.circle cx="130" cy="130" r="112" fill="none"
+          stroke={cfg.ring} strokeWidth="8" strokeDasharray="45 15 25 15" opacity="0.6"
+          animate={{ rotate: -360 }} transition={{ duration: cfg.speed[0] * 0.8, repeat: Infinity, ease: 'linear' }}
           style={{ originX: '130px', originY: '130px' }}
         />
-        {/* Large arc segment ring — CW */}
-        <motion.circle cx="130" cy="130" r="94" fill="none"
-          stroke={cfg.ring} strokeWidth="1.2" strokeDasharray="140 50 60 50" opacity="0.40"
+        {/* Medium dashed ring */}
+        <motion.circle cx="130" cy="130" r="98" fill="none"
+          stroke={cfg.ring} strokeWidth="1" strokeDasharray="1 6" opacity="0.5"
           animate={{ rotate: 360 }} transition={{ duration: cfg.speed[1], repeat: Infinity, ease: 'linear' }}
           style={{ originX: '130px', originY: '130px' }}
         />
-        {/* Inner fast ring — CCW */}
-        <motion.circle cx="130" cy="130" r="78" fill="none"
-          stroke={cfg.ring} strokeWidth="0.6" strokeDasharray="12 20" opacity="0.28"
-          animate={{ rotate: -360 }} transition={{ duration: cfg.speed[2] * 0.9, repeat: Infinity, ease: 'linear' }}
-          style={{ originX: '130px', originY: '130px' }}
-        />
-        {/* Frame ring — fast CW */}
-        <motion.circle cx="130" cy="130" r="64" fill="none"
-          stroke={cfg.ring} strokeWidth="2.5" strokeDasharray="55 18 12 18" opacity="0.60"
-          animate={{ rotate: 360 }} transition={{ duration: cfg.speed[2], repeat: Infinity, ease: 'linear' }}
-          style={{ originX: '130px', originY: '130px' }}
-        />
-        {/* Inner boundary */}
-        <circle cx="130" cy="130" r="52" fill="none" stroke={cfg.ring} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.20" />
-
-        {/* Sweeping highlight beam */}
-        <motion.path d="M 88 130 A 42 42 0 0 1 172 130" fill="none"
-          stroke={cfg.ring} strokeWidth="2" opacity="0.45"
-          animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+        {/* Solid glowing boundary ring */}
+        <circle cx="130" cy="130" r="86" fill="none" stroke={cfg.ring} strokeWidth="3" opacity="0.8" style={{ filter: `drop-shadow(0 0 5px ${cfg.glow})` }} />
+        
+        {/* Inner gears/segments */}
+        <motion.circle cx="130" cy="130" r="76" fill="none"
+          stroke={cfg.ring} strokeWidth="12" strokeDasharray="12 4" opacity="0.4"
+          animate={{ rotate: -360 }} transition={{ duration: cfg.speed[2], repeat: Infinity, ease: 'linear' }}
           style={{ originX: '130px', originY: '130px' }}
         />
 
-        {/* 8 tick lines on outermost ring */}
-        {Array.from({ length: 8 }).map((_, i) => {
-          const angle = (i / 8) * 360;
+        {/* 4 Crosshairs extending outward */}
+        {Array.from({ length: 4 }).map((_, i) => {
+          const angle = (i / 4) * 360;
           const rad = angle * (Math.PI / 180);
-          const x1 = 130 + 115 * Math.cos(rad);
-          const y1 = 130 + 115 * Math.sin(rad);
-          const x2 = 130 + 124 * Math.cos(rad);
-          const y2 = 130 + 124 * Math.sin(rad);
-          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={cfg.ring} strokeWidth="2" opacity="0.35" />;
+          const x1 = 130 + 130 * Math.cos(rad);
+          const y1 = 130 + 130 * Math.sin(rad);
+          const x2 = 130 + 145 * Math.cos(rad);
+          const y2 = 130 + 145 * Math.sin(rad);
+          return <line key={`cross-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={cfg.ring} strokeWidth="1.5" opacity="0.5" />;
         })}
       </svg>
 
       {/* ---- Central pulsing energy sphere ---- */}
       <motion.div
-        className="relative w-28 h-28 rounded-full flex items-center justify-center"
+        className="relative w-36 h-36 rounded-full flex items-center justify-center"
         style={{
-          background: `radial-gradient(circle at 38% 38%, ${cfg.core} 0%, ${cfg.core}66 25%, rgba(5,10,25,0.95) 68%)`,
-          boxShadow: `0 0 22px ${cfg.glow}, 0 0 45px ${cfg.glow.replace('0.', '0.0')}`
+          background: `radial-gradient(circle at 50% 50%, ${cfg.core}22 0%, rgba(5,10,25,0.85) 70%)`,
+          boxShadow: `inset 0 0 30px ${cfg.glow}, 0 0 22px ${cfg.glow}, 0 0 60px ${cfg.glow.replace('0.', '0.0')}`
         }}
         animate={pulseAnim}
         transition={{ duration: pulseDuration, repeat: Infinity, ease: 'easeInOut' }}
       >
-        {/* Arc reactor style hexagonal inner rings */}
+        {/* Thick glowing core pupil */}
         <motion.div
-          className="w-14 h-14 rounded-full border flex items-center justify-center"
-          style={{ borderColor: `${cfg.core}55` }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+          className="w-16 h-16 rounded-full border-4 flex items-center justify-center"
+          style={{ borderColor: cfg.core, boxShadow: `0 0 20px ${cfg.core}, inset 0 0 15px ${cfg.core}` }}
+          animate={{ rotate: 360, scale: speechState === 'listening' ? [1, 1.1, 1] : 1 }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <motion.div
-            className="w-8 h-8 rounded-full border-2 flex items-center justify-center"
-            style={{ borderColor: cfg.core }}
-            animate={{ rotate: -360 }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-          >
-            <div className="w-3.5 h-3.5 rounded-full" style={{ background: cfg.core, boxShadow: `0 0 10px ${cfg.core}` }} />
-          </motion.div>
+          {/* Innermost dot */}
+          <div className="w-6 h-6 rounded-full" style={{ background: cfg.core, boxShadow: `0 0 15px ${cfg.core}` }} />
         </motion.div>
 
-        {/* Orbiting dot */}
+        {/* Orbiting satellite dot */}
         <motion.div
           className="absolute w-full h-full"
           animate={{ rotate: 360 }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
         >
-          <div className="absolute top-1 left-1/2 -ml-1 w-2 h-2 rounded-full"
-            style={{ background: cfg.core, boxShadow: `0 0 8px ${cfg.core}` }}
+          <div className="absolute top-2 left-1/2 -ml-1.5 w-3 h-3 rounded-full"
+            style={{ background: cfg.core, boxShadow: `0 0 10px ${cfg.core}` }}
           />
         </motion.div>
       </motion.div>
 
       {/* ---- State label ---- */}
-      <div className="absolute -bottom-10 flex flex-col items-center">
-        <span className="font-sharetech text-[8px] text-gray-600 tracking-[0.2em] uppercase">AI Core State</span>
+      <div className="absolute -bottom-12 flex flex-col items-center">
+        <span className="font-sharetech text-[9px] text-cyan-500/80 tracking-[0.25em] uppercase">Core Telemetry</span>
         <motion.span
           key={speechState}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="font-orbitron text-[11px] font-bold tracking-[0.15em] uppercase"
-          style={{ color: cfg.core, textShadow: `0 0 8px ${cfg.glow}` }}
+          className="font-orbitron text-[13px] font-bold tracking-[0.15em] uppercase mt-0.5"
+          style={{ color: cfg.core, textShadow: `0 0 10px ${cfg.glow}` }}
         >
           {cfg.label}
         </motion.span>

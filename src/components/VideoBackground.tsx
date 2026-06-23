@@ -77,26 +77,31 @@ export const VideoBackground = forwardRef<VideoBackgroundHandle, VideoBackground
               }
         }
       />
-      {/* Cinematic intro doesn't have overlays, only background mode does */}
-      {mode === 'background' && (
-        <>
-          {/* Deep dark overlay — keeps holographic UI readable */}
-          <div
-            className="absolute inset-0 transition-opacity duration-1000"
-            style={{ background: 'rgba(3,5,12,0.60)' }}
-          />
-          {/* Subtle cyan radial tint at centre */}
-          <div
-            className="absolute inset-0"
-            style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,240,255,0.04) 0%, transparent 70%)' }}
-          />
-          {/* Bottom vignette so footer panels don't fight the video */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-40"
-            style={{ background: 'linear-gradient(to top, rgba(3,5,12,0.7) 0%, transparent 100%)' }}
-          />
-        </>
-      )}
+      {/* Overlays are always rendered to allow CSS transitions to work smoothly */}
+      {/* Deep dark overlay — keeps holographic UI readable */}
+      <div
+        className="absolute inset-0 transition-opacity duration-1000"
+        style={{ 
+          background: 'rgba(3,5,12,0.60)', 
+          opacity: mode === 'background' ? 1 : 0 
+        }}
+      />
+      {/* Subtle cyan radial tint at centre */}
+      <div
+        className="absolute inset-0 transition-opacity duration-1000"
+        style={{ 
+          background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,240,255,0.04) 0%, transparent 70%)',
+          opacity: mode === 'background' ? 1 : 0 
+        }}
+      />
+      {/* Bottom vignette so footer panels don't fight the video */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-40 transition-opacity duration-1000"
+        style={{ 
+          background: 'linear-gradient(to top, rgba(3,5,12,0.7) 0%, transparent 100%)',
+          opacity: mode === 'background' ? 1 : 0 
+        }}
+      />
     </div>
   );
 });
