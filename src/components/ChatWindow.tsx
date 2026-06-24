@@ -75,11 +75,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     setSpeechState('processing');
     setIsTyping(true);
 
-    const apiKey = provider === 'gemini'
-      ? localStorage.getItem('jarvis_gemini_key') || ''
-      : localStorage.getItem('jarvis_openai_key') || '';
-
-    const reply = await fetchLLMResponse(query, messages.slice(-6), provider, selectedModel, apiKey);
+    const reply = await fetchLLMResponse(query, messages.slice(-6), provider, selectedModel, nickname);
 
     setIsTyping(false);
     setMessages(p => [...p, { role: 'assistant', content: reply }]);

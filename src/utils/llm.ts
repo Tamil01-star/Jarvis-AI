@@ -91,10 +91,15 @@ export const fetchLLMResponse = async (
       throw new Error(`Server returned ${response.status}`);
     }
 
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error(`Expected JSON response but received: ${contentType || 'unknown'}. Please make sure you are accessing the dev server on port 3000 (not preview/production or default Vite port 5173).`);
+    }
+
     const data = await response.json();
     return data.reply;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Backend request failed:", error);
-    return `[SYSTEM ERROR] Sir, connection to the backend node failed. Reverting to local fallback core.`;
+    return `[SYSTEM ERROR] Sir, connection to the backend node failed (${error.message || error}). Reverting to local fallback core.`;
   }
 };

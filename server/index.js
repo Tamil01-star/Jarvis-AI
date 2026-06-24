@@ -6,6 +6,10 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') }); // Load roo
 
 const app = express();
 app.use(cors());
+app.use((req, res, next) => {
+  console.log(`[SERVER] ${req.method} ${req.url}`);
+  next();
+});
 app.use(express.json());
 
 // Helper to get or create a user by nickname
@@ -95,7 +99,10 @@ app.post('/api/chat', async (req, res) => {
       aiResponse = `[SYSTEM ALERT] Sir, the ${provider.toUpperCase()} cognitive node is selected, but the API key is missing. Please configure VITE_${provider.toUpperCase()}_API_KEY in the .env file.`;
     } else if (provider === 'gemini') {
       // Gemini API Call
-      const modelName = selectedModel || "gemini-1.5-flash";
+      let modelName = selectedModel || "gemini-2.5-flash";
+      if (modelName === "gemini-1.5-flash") modelName = "gemini-2.5-flash";
+      if (modelName === "gemini-1.5-pro") modelName = "gemini-2.5-pro";
+
       const contents = [
         ...history.map(msg => ({
           role: msg.role === 'user' ? 'user' : 'model',
@@ -117,16 +124,38 @@ app.post('/api/chat', async (req, res) => {
         })
       });
       if (gRes.ok) {
-        const data = await gRes.json();
-        aiResponse = data.candidates[0].content.parts[0].text;
+        let data;
+        try {
+          data = await gRes.json();
+        } catch (jsonErr) {
+          throw new Error(`Failed to parse Gemini response JSON: ${jsonErr.message}`);
+        }
+
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+          aiResponse = data.candidates[0].content.parts[0].text;
+        } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+          aiResponse = `[SYSTEM ALERT] Sir, the cognitive output was blocked by security protocols. Reason: ${data.promptFeedback.blockReason}`;
+        } else {
+          aiResponse = "[SYSTEM ALERT] Sir, the cognitive node returned an empty response. Please retry.";
+        }
       } else {
-        const err = await gRes.json();
-        aiResponse = `[SYSTEM ERROR] ${err.error?.message}`;
+        let errMsg = "Unknown error";
+        try {
+          const err = await gRes.json();
+          errMsg = err.error?.message || JSON.stringify(err);
+        } catch (e) {
+          try {
+            errMsg = await gRes.text();
+          } catch (tErr) {
+            errMsg = gRes.statusText || "unreadable error response";
+          }
+        }
+        aiResponse = `[SYSTEM ERROR] ${errMsg}`;
       }
     } else if (provider === 'openai') {
       // OpenAI API Call
       const messages = [
-        { role: "system", content: "You are JARVIS..." },
+        { role: "system", content: "You are JARVIS, the premium AI operating system for Tony Stark. Speak with a refined, high-intelligence, British-accented assistant vibe. Always call the user 'sir' or by their configured nickname. Keep replies crisp, structured, and informative. Reference Stark Industries tech and sensors if relevant." },
         ...history.map(msg => ({
           role: msg.role === 'user' ? 'user' : 'assistant',
           content: msg.content
@@ -146,11 +175,31 @@ app.post('/api/chat', async (req, res) => {
         })
       });
       if (oRes.ok) {
-        const data = await oRes.json();
-        aiResponse = data.choices[0].message.content;
+        let data;
+        try {
+          data = await oRes.json();
+        } catch (jsonErr) {
+          throw new Error(`Failed to parse OpenAI response JSON: ${jsonErr.message}`);
+        }
+
+        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+          aiResponse = data.choices[0].message.content;
+        } else {
+          aiResponse = "[SYSTEM ALERT] Sir, the OpenAI cognitive node returned an empty response.";
+        }
       } else {
-        const err = await oRes.json();
-        aiResponse = `[SYSTEM ERROR] ${err.error?.message}`;
+        let errMsg = "Unknown error";
+        try {
+          const err = await oRes.json();
+          errMsg = err.error?.message || JSON.stringify(err);
+        } catch (e) {
+          try {
+            errMsg = await oRes.text();
+          } catch (tErr) {
+            errMsg = oRes.statusText || "unreadable error response";
+          }
+        }
+        aiResponse = `[SYSTEM ERROR] ${errMsg}`;
       }
     }
 

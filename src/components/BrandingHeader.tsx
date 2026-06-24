@@ -63,7 +63,7 @@ export const BrandingHeader: React.FC<BrandingHeaderProps> = ({ nickname, onLogo
             STARK <span className="text-cyan-400">INDUSTRIES</span>
           </span>
           <span className="font-sharetech text-[7px] text-gray-600 tracking-[0.3em] mt-0.5">
-            JARVIS OS ARCHITECTURE v8.42
+            JARVIS OS ARCHITECTURE v8.42 (DB ENGINE ACTIVE)
           </span>
         </div>
 

@@ -68,7 +68,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     playClick();
     setProvider(p);
     let defaultModel = 'offline-core';
-    if (p === 'gemini') defaultModel = 'gemini-1.5-flash';
+    if (p === 'gemini') defaultModel = 'gemini-2.5-flash';
     else if (p === 'openai') defaultModel = 'gpt-4o';
     
     setSelectedModel(defaultModel);
@@ -150,8 +150,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           >
             {provider === 'gemini' ? (
               <>
-                <option value="gemini-1.5-flash">gemini-1.5-flash (Fast)</option>
-                <option value="gemini-1.5-pro">gemini-1.5-pro (Creative)</option>
+                <option value="gemini-2.5-flash">gemini-2.5-flash (Fast)</option>
+                <option value="gemini-2.5-pro">gemini-2.5-pro (Creative)</option>
               </>
             ) : (
               <>
