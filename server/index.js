@@ -5,7 +5,17 @@ const db = require('./db');
 require('dotenv').config({ path: path.join(__dirname, '../.env') }); // Load root .env for API keys
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests from any localhost port, or no origin (e.g. curl / server-to-server)
+    if (!origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use((req, res, next) => {
   console.log(`[SERVER] ${req.method} ${req.url}`);
   next();
