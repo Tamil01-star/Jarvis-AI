@@ -16,6 +16,8 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
+        timeout: 60000,         // 60s – handles slow Gemini/OpenAI responses
+        proxyTimeout: 60000,    // 60s – node-http-proxy upstream timeout
       }
     }
   },
