@@ -5,17 +5,8 @@ const db = require('./db');
 require('dotenv').config({ path: path.join(__dirname, '../.env') }); // Load root .env for API keys
 
 const app = express();
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests from any localhost port, or no origin (e.g. curl / server-to-server)
-    if (!origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+// Allow all origins in local dev — the API keys are server-side so there's no security risk
+app.use(cors({ origin: true, credentials: true }));
 app.use((req, res, next) => {
   console.log(`[SERVER] ${req.method} ${req.url}`);
   next();
@@ -108,10 +99,23 @@ app.post('/api/chat', async (req, res) => {
     if (provider !== 'offline' && !finalApiKey) {
       aiResponse = `[SYSTEM ALERT] Sir, the ${provider.toUpperCase()} cognitive node is selected, but the API key is missing. Please configure VITE_${provider.toUpperCase()}_API_KEY in the .env file.`;
     } else if (provider === 'gemini') {
-      // Gemini API Call
-      let modelName = selectedModel || "gemini-2.5-flash";
-      if (modelName === "gemini-1.5-flash") modelName = "gemini-2.5-flash";
-      if (modelName === "gemini-1.5-pro") modelName = "gemini-2.5-pro";
+      // Gemini model fallback chain — auto-skips overloaded models
+      const GEMINI_MODELS = [
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-1.0-pro',
+      ];
+
+      // If user picked a specific model, put it first in the chain
+      let requestedModel = selectedModel || 'gemini-2.0-flash';
+      // Remap legacy names
+      if (requestedModel === 'gemini-1.5-flash') requestedModel = 'gemini-2.0-flash';
+      if (requestedModel === 'gemini-1.5-pro')   requestedModel = 'gemini-2.0-flash';
+      if (requestedModel === 'gemini-2.5-flash') requestedModel = 'gemini-2.0-flash';
+      if (requestedModel === 'gemini-2.5-pro')   requestedModel = 'gemini-2.0-flash';
+
+      const modelChain = [requestedModel, ...GEMINI_MODELS.filter(m => m !== requestedModel)];
 
       const contents = [
         ...history.map(msg => ({
@@ -120,47 +124,62 @@ app.post('/api/chat', async (req, res) => {
         })),
         { role: 'user', parts: [{ text: message }] }
       ];
-      
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalApiKey}`;
-      const gRes = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: "You are JARVIS, the premium AI operating system for Tony Stark. Speak with a refined, high-intelligence, British-accented assistant vibe. Always call the user 'sir' or by their configured nickname. Keep replies crisp, structured, and informative. Reference Stark Industries tech and sensors if relevant." }]
-          },
-          contents,
-          generationConfig: { maxOutputTokens: 400 }
-        })
-      });
-      if (gRes.ok) {
-        let data;
-        try {
-          data = await gRes.json();
-        } catch (jsonErr) {
-          throw new Error(`Failed to parse Gemini response JSON: ${jsonErr.message}`);
-        }
 
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-          aiResponse = data.candidates[0].content.parts[0].text;
-        } else if (data.promptFeedback && data.promptFeedback.blockReason) {
-          aiResponse = `[SYSTEM ALERT] Sir, the cognitive output was blocked by security protocols. Reason: ${data.promptFeedback.blockReason}`;
-        } else {
-          aiResponse = "[SYSTEM ALERT] Sir, the cognitive node returned an empty response. Please retry.";
-        }
-      } else {
-        let errMsg = "Unknown error";
+      const SYSTEM_PROMPT = "You are JARVIS, the premium AI operating system for Tony Stark. Speak with a refined, high-intelligence, British-accented assistant vibe. Always call the user 'sir' or by their configured nickname. Keep replies crisp, structured, and informative. Reference Stark Industries tech and sensors if relevant.";
+
+      let lastErr = 'All Gemini models unavailable';
+      for (const modelName of modelChain) {
         try {
-          const err = await gRes.json();
-          errMsg = err.error?.message || JSON.stringify(err);
-        } catch (e) {
-          try {
-            errMsg = await gRes.text();
-          } catch (tErr) {
-            errMsg = gRes.statusText || "unreadable error response";
+          console.log(`[JARVIS] Trying Gemini model: ${modelName}`);
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${finalApiKey}`;
+          const gRes = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+              contents,
+              generationConfig: { maxOutputTokens: 400 }
+            }),
+            signal: AbortSignal.timeout(20000) // 20s per model attempt
+          });
+
+          if (gRes.ok) {
+            const data = await gRes.json();
+            if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+              aiResponse = data.candidates[0].content.parts[0].text;
+              console.log(`[JARVIS] Gemini responded via ${modelName}`);
+              break; // success — stop the chain
+            } else if (data.promptFeedback?.blockReason) {
+              aiResponse = `[SYSTEM ALERT] Sir, the cognitive output was blocked. Reason: ${data.promptFeedback.blockReason}`;
+              break;
+            }
+            // empty response — try next model
+            lastErr = 'Empty response';
+          } else {
+            // HTTP error — check if it's a capacity/overload error worth retrying
+            let errBody;
+            try { errBody = await gRes.json(); } catch { errBody = {}; }
+            const errMsg = errBody?.error?.message || gRes.statusText || '';
+            const isOverloaded = gRes.status === 503 || gRes.status === 429 || errMsg.toLowerCase().includes('demand') || errMsg.toLowerCase().includes('overload') || errMsg.toLowerCase().includes('capacity');
+            console.warn(`[JARVIS] ${modelName} returned ${gRes.status}: ${errMsg}`);
+            if (isOverloaded) {
+              lastErr = errMsg;
+              continue; // try next model
+            }
+            // Non-retryable error (auth, quota, etc.)
+            aiResponse = `[SYSTEM ERROR] ${errMsg}`;
+            break;
           }
+        } catch (fetchErr) {
+          console.warn(`[JARVIS] ${modelName} fetch error: ${fetchErr.message}`);
+          lastErr = fetchErr.message;
+          // timeout or network error — try next model
         }
-        aiResponse = `[SYSTEM ERROR] ${errMsg}`;
+      }
+
+      // If loop ended with no successful aiResponse set
+      if (aiResponse === "Offline fallback. Reverting to local core.") {
+        aiResponse = `[SYSTEM ERROR] Sir, all Gemini cognitive nodes are currently at capacity. ${lastErr}. Please try again in a moment.`;
       }
     } else if (provider === 'openai') {
       // OpenAI API Call
