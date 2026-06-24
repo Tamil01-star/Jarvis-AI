@@ -99,21 +99,22 @@ app.post('/api/chat', async (req, res) => {
     if (provider !== 'offline' && !finalApiKey) {
       aiResponse = `[SYSTEM ALERT] Sir, the ${provider.toUpperCase()} cognitive node is selected, but the API key is missing. Please configure VITE_${provider.toUpperCase()}_API_KEY in the .env file.`;
     } else if (provider === 'gemini') {
-      // Gemini model fallback chain — auto-skips overloaded models
+      // Gemini model fallback chain — only models confirmed available via ListModels
       const GEMINI_MODELS = [
         'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-8b',
-        'gemini-1.0-pro',
+        'gemini-2.0-flash-lite',
+        'gemini-2.5-flash-lite',
+        'gemini-flash-latest',
       ];
 
       // If user picked a specific model, put it first in the chain
       let requestedModel = selectedModel || 'gemini-2.0-flash';
-      // Remap legacy names
+      // Remap legacy / unavailable names to valid ones
       if (requestedModel === 'gemini-1.5-flash') requestedModel = 'gemini-2.0-flash';
       if (requestedModel === 'gemini-1.5-pro')   requestedModel = 'gemini-2.0-flash';
       if (requestedModel === 'gemini-2.5-flash') requestedModel = 'gemini-2.0-flash';
       if (requestedModel === 'gemini-2.5-pro')   requestedModel = 'gemini-2.0-flash';
+      if (requestedModel === 'gemini-1.0-pro')   requestedModel = 'gemini-2.0-flash';
 
       const modelChain = [requestedModel, ...GEMINI_MODELS.filter(m => m !== requestedModel)];
 
@@ -140,7 +141,7 @@ app.post('/api/chat', async (req, res) => {
               contents,
               generationConfig: { maxOutputTokens: 400 }
             }),
-            signal: AbortSignal.timeout(20000) // 20s per model attempt
+            signal: AbortSignal.timeout(10000) // 10s per model attempt
           });
 
           if (gRes.ok) {
