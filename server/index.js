@@ -15,10 +15,18 @@ app.use(express.json());
 
 const admin = require('firebase-admin');
 
-// Initialize Firebase Admin for token verification
-admin.initializeApp({
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID
-});
+// Initialize Firebase Admin for token verification safely
+try {
+  if (process.env.VITE_FIREBASE_PROJECT_ID) {
+    admin.initializeApp({
+      projectId: process.env.VITE_FIREBASE_PROJECT_ID
+    });
+  } else {
+    console.warn("VITE_FIREBASE_PROJECT_ID is not set.");
+  }
+} catch (e) {
+  console.error("Firebase Admin initialization error:", e);
+}
 
 // Middleware to verify Firebase ID token or allow Guest
 async function verifyAuth(req, res, next) {

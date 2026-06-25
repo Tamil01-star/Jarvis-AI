@@ -1,9 +1,19 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+let pool;
+if (process.env.DATABASE_URL) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+} else {
+  console.warn("DATABASE_URL is missing!");
+  // Dummy pool that throws on query so the server starts but queries fail gracefully
+  pool = {
+    query: async () => { throw new Error("Database not configured."); },
+    on: () => {}
+  };
+}
 
 pool.on('connect', () => {
   console.log('Connected to Neon PostgreSQL database.');
