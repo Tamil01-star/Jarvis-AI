@@ -49,7 +49,7 @@ async function verifyAuth(req, res, next) {
     next();
   } catch (error) {
     console.error('Error verifying auth token:', error);
-    res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    res.status(401).json({ error: `Invalid token: ${error.message}` });
   }
 }
 
