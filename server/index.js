@@ -99,22 +99,22 @@ app.post('/api/chat', async (req, res) => {
     if (provider !== 'offline' && !finalApiKey) {
       aiResponse = `[SYSTEM ALERT] Sir, the ${provider.toUpperCase()} cognitive node is selected, but the API key is missing. Please configure VITE_${provider.toUpperCase()}_API_KEY in the .env file.`;
     } else if (provider === 'gemini') {
-      // Gemini model fallback chain — only models confirmed available via ListModels
+      // Gemini model fallback chain — only confirmed working free-tier models
       const GEMINI_MODELS = [
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-2.0-flash-lite',
-        'gemini-2.5-flash-lite',
-        'gemini-flash-latest',
+        'gemini-2.5-flash',            // primary — fastest, free tier
+        'gemini-2.5-flash-lite',       // fallback 1 — lighter, still free
+        'gemini-3-flash-preview',      // fallback 2 — free preview
+        'gemini-3.1-flash-lite-preview', // fallback 3 — lightest, always available
       ];
 
       // If user picked a specific model, put it first in the chain
       let requestedModel = selectedModel || 'gemini-2.5-flash';
-      // Remap legacy / unavailable names to valid ones
+      // Remap all legacy / unavailable names to working model
       if (requestedModel === 'gemini-1.5-flash') requestedModel = 'gemini-2.5-flash';
       if (requestedModel === 'gemini-1.5-pro')   requestedModel = 'gemini-2.5-flash';
       if (requestedModel === 'gemini-2.5-pro')   requestedModel = 'gemini-2.5-flash';
       if (requestedModel === 'gemini-1.0-pro')   requestedModel = 'gemini-2.5-flash';
+      if (requestedModel === 'gemini-2.0-flash') requestedModel = 'gemini-2.5-flash';
 
       const modelChain = [requestedModel, ...GEMINI_MODELS.filter(m => m !== requestedModel)];
 
