@@ -89,7 +89,7 @@ app.post('/api/user', verifyAuth, async (req, res) => {
     res.json({ user, settings: settingsRes.rows[0] });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: `Server error: ${error.message}` });
   }
 });
 
@@ -108,7 +108,7 @@ app.post('/api/settings', verifyAuth, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: `Server error: ${error.message}` });
   }
 });
 
@@ -125,7 +125,7 @@ app.get('/api/history', verifyAuth, async (req, res) => {
     res.json(historyRes.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: `Server error: ${error.message}` });
   }
 });
 
@@ -288,7 +288,7 @@ app.post('/api/chat', verifyAuth, async (req, res) => {
     res.json({ reply: aiResponse });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: `Server error: ${error.message}` });
   }
 });
 
