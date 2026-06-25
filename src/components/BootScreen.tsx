@@ -272,50 +272,18 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, onVideoS
                 <hr className="flex-1 border-gray-800" />
               </div>
 
-              {/* Biometric pad */}
-              <div className="flex flex-col items-center space-y-3">
-                {/* Single tap/click to start scan */}
+              {/* Skip Sign-In Option */}
+              <div className="flex flex-col items-center space-y-3 pt-2">
                 <button
-                  onClick={handleStartScan}
-                  disabled={scanDone || scanActive}
-                  className={`relative w-28 h-28 rounded-full overflow-hidden border transition-all duration-300 flex items-center justify-center
-                    ${scanActive
-                      ? 'border-cyan-400 bg-cyan-400/10 shadow-[0_0_24px_rgba(0,240,255,0.45)] cursor-not-allowed'
-                      : scanDone
-                        ? 'border-green-400 bg-green-400/10 shadow-[0_0_16px_rgba(0,255,102,0.35)] cursor-not-allowed'
-                        : 'border-cyan-500/30 hover:border-cyan-400/70 hover:bg-cyan-400/5 cursor-pointer'
-                    }`}
+                  onClick={() => {
+                    playSuccess();
+                    setNickname('Guest');
+                    setPhase('nickname');
+                  }}
+                  className="px-6 py-2 rounded-full border border-gray-600/50 text-gray-400 hover:text-white hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-sharetech tracking-widest"
                 >
-                  {scanDone ? (
-                    <Check className="w-14 h-14 text-green-400" />
-                  ) : (
-                    <Fingerprint className={`w-14 h-14 transition-colors ${scanActive ? 'text-cyan-300 animate-pulse' : 'text-cyan-500/50'}`} />
-                  )}
-                  {scanActive && <div className="scanner-laser" />}
+                  SKIP SIGN-IN (GUEST MODE)
                 </button>
-
-                {/* Progress text */}
-                <div className="font-sharetech text-[10px] tracking-widest text-center min-h-[16px]">
-                  {scanDone ? (
-                    <span className="text-green-400 text-glow-green">✓ BIOMETRIC VERIFIED</span>
-                  ) : scanActive ? (
-                    <span className="text-cyan-300 text-glow-cyan animate-pulse">
-                      SCANNING... {scanPct}%
-                    </span>
-                  ) : (
-                    <span className="text-gray-600">CLICK TO SCAN FINGERPRINT</span>
-                  )}
-                </div>
-
-                {/* Scan progress bar */}
-                {(scanActive || scanDone) && (
-                  <div className="w-40 h-1 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div className="h-full rounded-full"
-                      style={{ background: scanDone ? '#00ff66' : 'linear-gradient(90deg,#0066ff,#00f0ff)' }}
-                      animate={{ width: `${scanPct}%` }}
-                      transition={{ duration: 0.2 }} />
-                  </div>
-                )}
               </div>
             </motion.div>
           )}

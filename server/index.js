@@ -20,11 +20,18 @@ admin.initializeApp({
   projectId: process.env.VITE_FIREBASE_PROJECT_ID
 });
 
-// Middleware to verify Firebase ID token
+// Middleware to verify Firebase ID token or allow Guest
 async function verifyAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    // If no token, assign to a shared Guest account
+    req.user = {
+      uid: 'jarvis_guest_user',
+      email: 'guest@starklabs.com',
+      name: 'Guest',
+      picture: ''
+    };
+    return next();
   }
 
   const idToken = authHeader.split('Bearer ')[1];
