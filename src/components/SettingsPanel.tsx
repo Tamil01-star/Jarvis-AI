@@ -40,9 +40,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   const syncSettingsToBackend = async (newProvider: string, newModel: string, newVolume: number) => {
     try {
-      await fetch('/api/settings', {
+      const { apiFetch } = await import('../utils/api');
+      await apiFetch('/api/settings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nickname,
           provider: newProvider,

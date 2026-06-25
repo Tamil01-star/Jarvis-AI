@@ -13,22 +13,57 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
-// Helper to get or create a user by nickname
-async function getOrCreateUser(nickname) {
-  let res = await db.query('SELECT * FROM users WHERE nickname = $1', [nickname]);
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin for token verification
+admin.initializeApp({
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID
+});
+
+// Middleware to verify Firebase ID token
+async function verifyAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+  }
+
+  const idToken = authHeader.split('Bearer ')[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    req.user = decodedToken; // attaches uid, email, name, picture to req.user
+    next();
+  } catch (error) {
+    console.error('Error verifying auth token:', error);
+    res.status(401).json({ error: 'Unauthorized: Invalid token' });
+  }
+}
+
+// Helper to get or create a user by Firebase UID
+async function getOrCreateUser(firebaseUser) {
+  const { uid, email, name, picture } = firebaseUser;
+  
+  let res = await db.query('SELECT * FROM users WHERE firebase_uid = $1', [uid]);
+  
   if (res.rows.length === 0) {
-    res = await db.query('INSERT INTO users (nickname) VALUES ($1) RETURNING *', [nickname]);
+    // New user
+    res = await db.query(
+      'INSERT INTO users (firebase_uid, email, name, avatar_url, nickname) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [uid, email, name, picture, name ? name.split(' ')[0] : 'User']
+    );
+  } else {
+    // Update existing user with latest Google profile data if needed
+    res = await db.query(
+      'UPDATE users SET email = $1, name = $2, avatar_url = $3 WHERE firebase_uid = $4 RETURNING *',
+      [email, name, picture, uid]
+    );
   }
   return res.rows[0];
 }
 
 // 1. Get or Create User & Settings
-app.post('/api/user', async (req, res) => {
+app.post('/api/user', verifyAuth, async (req, res) => {
   try {
-    const { nickname } = req.body;
-    if (!nickname) return res.status(400).json({ error: 'Nickname required' });
-    
-    const user = await getOrCreateUser(nickname);
+    const user = await getOrCreateUser(req.user);
     
     // Get settings
     let settingsRes = await db.query('SELECT * FROM settings WHERE user_id = $1', [user.id]);
@@ -44,10 +79,10 @@ app.post('/api/user', async (req, res) => {
 });
 
 // 2. Update Settings
-app.post('/api/settings', async (req, res) => {
+app.post('/api/settings', verifyAuth, async (req, res) => {
   try {
-    const { nickname, provider, selected_model, volume } = req.body;
-    const user = await getOrCreateUser(nickname);
+    const { provider, selected_model, volume } = req.body;
+    const user = await getOrCreateUser(req.user);
     
     await db.query(`
       UPDATE settings 
@@ -63,12 +98,9 @@ app.post('/api/settings', async (req, res) => {
 });
 
 // 3. Get Chat History
-app.get('/api/history', async (req, res) => {
+app.get('/api/history', verifyAuth, async (req, res) => {
   try {
-    const { nickname } = req.query;
-    if (!nickname) return res.status(400).json({ error: 'Nickname required' });
-    
-    const user = await getOrCreateUser(nickname);
+    const user = await getOrCreateUser(req.user);
     const historyRes = await db.query(`
       SELECT role, content FROM chat_history 
       WHERE user_id = $1 
@@ -83,10 +115,10 @@ app.get('/api/history', async (req, res) => {
 });
 
 // 4. Chat Endpoint (Calls LLM and Saves to DB)
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', verifyAuth, async (req, res) => {
   try {
-    const { nickname, message, history, provider, selectedModel } = req.body;
-    const user = await getOrCreateUser(nickname);
+    const { message, history, provider, selectedModel } = req.body;
+    const user = await getOrCreateUser(req.user);
     
     // Save User Message
     await db.query('INSERT INTO chat_history (user_id, role, content) VALUES ($1, $2, $3)', [user.id, 'user', message]);

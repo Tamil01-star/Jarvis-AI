@@ -101,83 +101,31 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, onVideoS
     playBeep();
   };
 
-  /* ── Google popup ── */
-  const handleGoogle = () => {
+  /* ── Google popup (Firebase Auth) ── */
+  const handleGoogle = async () => {
     playClick();
-    const w = 500, h = 560;
-    const left = Math.round((screen.width - w) / 2);
-    const top  = Math.round((screen.height - h) / 2);
-    const popup = window.open('', 'JARVISGoogleLogin',
-      `width=${w},height=${h},left=${left},top=${top},resizable=no`);
-    if (!popup) {
-      alert('Please allow pop-ups for this page to use Google login.');
-      return;
-    }
+    
+    // Import dynamically so it doesn't break if Firebase isn't set up
+    const { auth, googleProvider } = await import('../utils/firebase');
+    const { signInWithPopup } = await import('firebase/auth');
 
-    popup.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8"/>
-  <title>Sign in — Google Accounts</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Roboto',sans-serif;background:#f1f3f4;display:flex;align-items:center;justify-content:center;min-height:100vh}
-    .card{background:#fff;border-radius:8px;box-shadow:0 2px 18px rgba(0,0,0,.12);padding:36px 32px;width:340px;text-align:center}
-    .logo{font-size:22px;font-weight:700;margin-bottom:18px}
-    .g-b{color:#4285F4}.g-o{color:#EA4335}.g-y{color:#FBBC05}.g-g{color:#34A853}
-    h2{font-size:20px;font-weight:500;margin-bottom:6px;color:#202124}
-    p{font-size:13px;color:#5f6368;margin-bottom:22px}
-    .acc{display:flex;align-items:center;padding:10px 14px;border:1px solid #dadce0;border-radius:24px;margin:8px 0;cursor:pointer;background:#fff;transition:.18s;text-align:left}
-    .acc:hover{background:#f8f9fa;border-color:#bbb}
-    .acc img{width:36px;height:36px;border-radius:50%;margin-right:12px;object-fit:cover;flex-shrink:0}
-    .name{font-size:14px;font-weight:500;color:#202124}
-    .email{font-size:11px;color:#5f6368}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="logo"><span class="g-b">G</span><span class="g-o">o</span><span class="g-y">o</span><span class="g-g">g</span><span class="g-b">l</span><span class="g-o">e</span></div>
-    <h2>Choose an account</h2>
-    <p>to continue to <strong>Stark OS&nbsp;/&nbsp;JARVIS</strong></p>
-
-    <div class="acc" onclick="choose('User','user@starklabs.com','https://i.pravatar.cc/80?img=12')">
-      <img src="https://i.pravatar.cc/80?img=12"
-           onerror="this.src='https://ui-avatars.com/api/?name=User&background=0066ff&color=fff'"/>
-      <div><div class="name">User</div><div class="email">user@starklabs.com</div></div>
-    </div>
-
-    <div class="acc" onclick="choose('Tony Stark','tony@starkindustries.com','https://i.pravatar.cc/80?img=68')">
-      <img src="https://i.pravatar.cc/80?img=68"
-           onerror="this.src='https://ui-avatars.com/api/?name=Tony+Stark&background=ff5d00&color=fff'"/>
-      <div><div class="name">Tony Stark</div><div class="email">tony@starkindustries.com</div></div>
-    </div>
-
-    <div class="acc" onclick="choose('Pepper Potts','pepper@starkindustries.com','https://i.pravatar.cc/80?img=47')">
-      <img src="https://i.pravatar.cc/80?img=47"
-           onerror="this.src='https://ui-avatars.com/api/?name=Pepper+Potts&background=9d00ff&color=fff'"/>
-      <div><div class="name">Pepper Potts</div><div class="email">pepper@starkindustries.com</div></div>
-    </div>
-  </div>
-  <script>
-    function choose(name,email,avatar){
-      window.opener.postMessage({type:'JARVIS_GOOGLE_AUTH',name,email,avatar},'*');
-      window.close();
-    }
-  </script>
-</body>
-</html>`);
-
-    const onMsg = (ev: MessageEvent) => {
-      if (ev.data?.type !== 'JARVIS_GOOGLE_AUTH') return;
-      window.removeEventListener('message', onMsg);
-      const { name, email, avatar } = ev.data;
-      setGoogleUser({ name, email, avatar });
-      setNickname(name.split(' ')[0]);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      setGoogleUser({ 
+        name: user.displayName || 'User', 
+        email: user.email || '', 
+        avatar: user.photoURL || '' 
+      });
+      
+      setNickname(user.displayName ? user.displayName.split(' ')[0] : 'User');
       playSuccess();
       setPhase('nickname');
-    };
-    window.addEventListener('message', onMsg);
+    } catch (error) {
+      console.error('Firebase Google Sign-in Error:', error);
+      playWarning();
+    }
   };
 
   /* ── Launch JARVIS ── */

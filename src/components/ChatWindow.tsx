@@ -53,15 +53,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await fetch(`/api/history?nickname=${encodeURIComponent(nickname || 'Sir')}`);
-        if (res.ok) {
-          const dbHistory = await res.json();
-          if (dbHistory.length > 0) {
-            setMessages(dbHistory);
-          }
-        }
-      } catch (e) {
-        console.warn('Could not load history from cloud:', e);
+        const { apiFetch } = await import('../utils/api');
+        const res = await apiFetch(`/api/history?nickname=${encodeURIComponent(nickname || 'Sir')}`);
+        if (!res.ok) throw new Error('Failed to fetch history');
+        const data = await res.json();
+        
+        const mapped = data.map((row: any) => ({
+          role: row.role,
+          content: row.content,
+          id: String(Math.random())
+        }));
+        
+        setMessages(mapped);
+      } catch (err) {
+        console.warn('Could not load history from cloud:', err);
       }
     };
     fetchHistory();

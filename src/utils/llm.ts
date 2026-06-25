@@ -50,11 +50,12 @@ const keywordResponses: { keywords: string[]; response: string }[] = [
   }
 ];
 
+import { apiFetch } from './api';
+
 // Helper — try one URL and return the parsed JSON reply, or throw
 async function tryFetch(url: string, body: object): Promise<string> {
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
