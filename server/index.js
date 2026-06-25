@@ -146,12 +146,14 @@ app.post('/api/chat', verifyAuth, async (req, res) => {
     if (provider !== 'offline' && !finalApiKey) {
       aiResponse = `[SYSTEM ALERT] Sir, the ${provider.toUpperCase()} cognitive node is selected, but the API key is missing. Please configure VITE_${provider.toUpperCase()}_API_KEY in the .env file.`;
     } else if (provider === 'gemini') {
-      // Gemini model fallback chain — only confirmed working free-tier models
+      // Gemini model fallback chain — strictly free-tier models
       const GEMINI_MODELS = [
-        'gemini-2.5-flash',            // primary — fastest, free tier
-        'gemini-2.5-flash-lite',       // fallback 1 — lighter, still free
-        'gemini-3-flash-preview',      // fallback 2 — free preview
-        'gemini-3.1-flash-lite-preview', // fallback 3 — lightest, always available
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-2.5-pro',
+        'gemini-3-flash-preview',
+        'gemini-3.1-flash-lite-preview',
+        'gemini-3.1-flash-live-preview'
       ];
 
       // If user picked a specific model, put it first in the chain
