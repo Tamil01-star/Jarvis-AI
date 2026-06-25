@@ -107,6 +107,13 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onBootComplete, onVideoS
     
     // Import dynamically so it doesn't break if Firebase isn't set up
     const { auth, googleProvider } = await import('../utils/firebase');
+    
+    if (!auth || !googleProvider) {
+      alert("System Error: Firebase keys are missing! If you are on Vercel, make sure you added the VITE_FIREBASE_* variables to Vercel Settings and Redeployed the app.");
+      playWarning();
+      return;
+    }
+
     const { signInWithPopup } = await import('firebase/auth');
 
     try {
