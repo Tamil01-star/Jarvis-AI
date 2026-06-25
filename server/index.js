@@ -101,6 +101,7 @@ app.post('/api/chat', async (req, res) => {
     } else if (provider === 'gemini') {
       // Gemini model fallback chain — only models confirmed available via ListModels
       const GEMINI_MODELS = [
+        'gemini-2.5-flash',
         'gemini-2.0-flash',
         'gemini-2.0-flash-lite',
         'gemini-2.5-flash-lite',
@@ -108,13 +109,12 @@ app.post('/api/chat', async (req, res) => {
       ];
 
       // If user picked a specific model, put it first in the chain
-      let requestedModel = selectedModel || 'gemini-2.0-flash';
+      let requestedModel = selectedModel || 'gemini-2.5-flash';
       // Remap legacy / unavailable names to valid ones
-      if (requestedModel === 'gemini-1.5-flash') requestedModel = 'gemini-2.0-flash';
-      if (requestedModel === 'gemini-1.5-pro')   requestedModel = 'gemini-2.0-flash';
-      if (requestedModel === 'gemini-2.5-flash') requestedModel = 'gemini-2.0-flash';
-      if (requestedModel === 'gemini-2.5-pro')   requestedModel = 'gemini-2.0-flash';
-      if (requestedModel === 'gemini-1.0-pro')   requestedModel = 'gemini-2.0-flash';
+      if (requestedModel === 'gemini-1.5-flash') requestedModel = 'gemini-2.5-flash';
+      if (requestedModel === 'gemini-1.5-pro')   requestedModel = 'gemini-2.5-flash';
+      if (requestedModel === 'gemini-2.5-pro')   requestedModel = 'gemini-2.5-flash';
+      if (requestedModel === 'gemini-1.0-pro')   requestedModel = 'gemini-2.5-flash';
 
       const modelChain = [requestedModel, ...GEMINI_MODELS.filter(m => m !== requestedModel)];
 
