@@ -62,10 +62,20 @@ async function tryFetch(url: string, body: object): Promise<string> {
   if (!response.ok) {
     let errorMsg = `HTTP ${response.status}`;
     try {
-      const errData = await response.json();
-      if (errData.error) errorMsg += `: ${errData.error}`;
+      const text = await response.text();
+      try {
+        const errData = JSON.parse(text);
+        const detailed = errData.error || errData.message || errData.errorMessage || JSON.stringify(errData);
+        if (detailed) {
+          errorMsg += `: ${detailed}`;
+        }
+      } catch (jsonErr) {
+        if (text && text.length < 200) {
+          errorMsg += `: ${text.trim()}`;
+        }
+      }
     } catch (e) {
-      // Ignore JSON parse error on error response
+      // Ignore reading error
     }
     throw new Error(errorMsg);
   }
