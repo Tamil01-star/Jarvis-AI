@@ -105,7 +105,10 @@ export const fetchLLMResponse = async (
 
   // Try via Vite proxy first (works when page is served from port 3000)
   // If that 404s/fails, fall back directly to port 5000 (always works locally)
-  const urls = ['/api/chat', 'http://localhost:5000/api/chat'];
+  const urls = ['/api/chat'];
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    urls.push('http://localhost:5000/api/chat');
+  }
 
   let lastErrorMsg = '';
 
