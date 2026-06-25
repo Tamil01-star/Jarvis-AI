@@ -58,7 +58,18 @@ async function tryFetch(url: string, body: object): Promise<string> {
     method: 'POST',
     body: JSON.stringify(body)
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  
+  if (!response.ok) {
+    let errorMsg = `HTTP ${response.status}`;
+    try {
+      const errData = await response.json();
+      if (errData.error) errorMsg += `: ${errData.error}`;
+    } catch (e) {
+      // Ignore JSON parse error on error response
+    }
+    throw new Error(errorMsg);
+  }
+  
   const data = await response.json();
   return data.reply;
 }
@@ -96,14 +107,17 @@ export const fetchLLMResponse = async (
   // If that 404s/fails, fall back directly to port 5000 (always works locally)
   const urls = ['/api/chat', 'http://localhost:5000/api/chat'];
 
+  let lastErrorMsg = '';
+
   for (const url of urls) {
     try {
       const reply = await tryFetch(url, payload);
       return reply;
     } catch (err: any) {
       console.warn(`[JARVIS] Attempt via ${url} failed: ${err.message}`);
+      lastErrorMsg = err.message;
     }
   }
 
-  return `[SYSTEM ERROR] Sir, all backend node connection attempts have failed. Please ensure the server is running with npm run dev.`;
+  return `[SYSTEM ERROR] Sir, the backend connection failed. Detail: ${lastErrorMsg}`;
 };
