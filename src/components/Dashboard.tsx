@@ -102,7 +102,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
       <input
         type="range"
         min="25"
-        max="75"
+        max="90"
         value={chatHeight}
         onChange={(e) => setChatHeight(Number(e.target.value))}
         className="w-16 h-1 bg-cyan-950 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none"
@@ -169,11 +169,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
 
           {/* AI Core display */}
           <div className="flex-1 min-h-[200px] flex items-center justify-center relative w-full">
-            {/* Background image (arc reactor) as faint overlay */}
-            <div
-              className="absolute w-48 h-48 rounded-full opacity-5 pointer-events-none"
-              style={{ backgroundImage: 'url(/arc_reactor.png)', backgroundSize: 'cover' }}
-            />
             <AICore
               speechState={speechState}
               onClick={() => {

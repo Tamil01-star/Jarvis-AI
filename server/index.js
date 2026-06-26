@@ -17,9 +17,9 @@ const admin = require('firebase-admin');
 
 // Initialize Firebase Admin for token verification safely
 try {
-  if (process.env.VITE_FIREBASE_PROJECT_ID) {
+  if (process.env.VITE_FIREBASE_PROJECT_ID || 'jarvis-ai-8547b') {
     admin.initializeApp({
-      projectId: process.env.VITE_FIREBASE_PROJECT_ID
+      projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'jarvis-ai-8547b'
     });
   } else {
     console.warn("VITE_FIREBASE_PROJECT_ID is not set.");
@@ -27,6 +27,8 @@ try {
 } catch (e) {
   console.error("Firebase Admin initialization error:", e);
 }
+
+const { getAuth } = require('firebase-admin/auth');
 
 // Middleware to verify Firebase ID token or allow Guest
 async function verifyAuth(req, res, next) {
@@ -44,7 +46,7 @@ async function verifyAuth(req, res, next) {
 
   const idToken = authHeader.split('Bearer ')[1];
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const decodedToken = await getAuth().verifyIdToken(idToken);
     req.user = decodedToken; // attaches uid, email, name, picture to req.user
     next();
   } catch (error) {

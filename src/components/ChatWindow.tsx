@@ -238,7 +238,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             }}
             placeholder={isListening ? 'Listening… or type here' : 'Ask JARVIS…'}
             rows={1}
-            style={{ resize: 'vertical', minHeight: '32px', maxHeight: '150px' }}
+            style={{ resize: 'vertical', minHeight: '44px', maxHeight: '400px' }}
             className="flex-1 bg-transparent px-3 py-1.5 text-[11px] text-white placeholder-gray-700 focus:outline-none font-sharetech select-text custom-scrollbar"
           />
           <button type="submit" disabled={!input.trim()}

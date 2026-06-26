@@ -21,7 +21,7 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  // Do not process.exit(-1) here to prevent serverless crashes
 });
 
 module.exports = {
