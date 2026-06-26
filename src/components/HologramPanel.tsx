@@ -5,17 +5,20 @@ interface HologramPanelProps {
   title: string;
   subtitle?: string;
   className?: string;
+  style?: React.CSSProperties;
   children: React.ReactNode;
   showHeaderScan?: boolean;
+  headerAction?: React.ReactNode;
 }
 
 export const HologramPanel: React.FC<HologramPanelProps> = ({
-  title, subtitle, className = '', children, showHeaderScan = false,
+  title, subtitle, className = '', style, children, showHeaderScan = false, headerAction,
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 8 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.35 }}
+    style={style}
     className={`hud-corners glass-panel rounded-md p-3.5 relative flex flex-col overflow-hidden group ${className}`}
   >
     {/* Corner helpers */}
@@ -37,12 +40,15 @@ export const HologramPanel: React.FC<HologramPanelProps> = ({
           </p>
         )}
       </div>
-      {/* Tiny status indicators */}
-      <div className="flex items-center space-x-1">
-        <motion.div className="w-1.5 h-1.5 rounded-full status-dot-online"
-          animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 2, repeat: Infinity }} />
-        <div className="w-2.5 h-0.5 bg-cyan-400/20 rounded-full" />
-        <div className="w-1 h-1 border border-cyan-400/30 rounded-sm" />
+      {/* Actions and Tiny status indicators */}
+      <div className="flex items-center space-x-2">
+        {headerAction && <div className="flex items-center mr-1 z-10">{headerAction}</div>}
+        <div className="flex items-center space-x-1">
+          <motion.div className="w-1.5 h-1.5 rounded-full status-dot-online"
+            animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 2, repeat: Infinity }} />
+          <div className="w-2.5 h-0.5 bg-cyan-400/20 rounded-full" />
+          <div className="w-1 h-1 border border-cyan-400/30 rounded-sm" />
+        </div>
       </div>
     </div>
 

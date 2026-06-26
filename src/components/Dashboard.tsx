@@ -7,6 +7,7 @@ import { SystemStatus } from './SystemStatus';
 import { TerminalConsole } from './TerminalConsole';
 import { ChatWindow } from './ChatWindow';
 import { SettingsPanel } from './SettingsPanel';
+import { WeatherStatus } from './WeatherStatus';
 import { processLocalSpeechCommand } from '../utils/commands';
 import { useAudioSynth } from '../hooks/useAudioSynth';
 import { VideoBackgroundHandle } from './VideoBackground';
@@ -63,6 +64,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
   );
   const [customNickname, setCustomNickname] = useState(nickname);
   const [speechState, setSpeechState] = useState<'idle' | 'listening' | 'speaking' | 'processing'>('idle');
+  const [chatHeight, setChatHeight] = useState(40); // User adjustable height in vh (default 40vh)
 
   const [scanning, setScanning] = useState(false);
   const [arcPower] = useState(100);
@@ -93,6 +95,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
 
   const pad2 = (n: number) => String(n).padStart(2, '0');
 
+  // Console height adjuster slider
+  const chatHeightControl = (
+    <div className="flex items-center space-x-1.5 bg-cyan-950/30 border border-cyan-500/25 rounded px-2 py-0.5 pointer-events-auto">
+      <span className="font-sharetech text-[7px] text-cyan-400/60 uppercase tracking-widest mr-1">Console Height:</span>
+      <input
+        type="range"
+        min="25"
+        max="75"
+        value={chatHeight}
+        onChange={(e) => setChatHeight(Number(e.target.value))}
+        className="w-16 h-1 bg-cyan-950 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none"
+        style={{
+          background: 'rgba(0, 240, 255, 0.1)'
+        }}
+        title="Adjust chat console height"
+      />
+      <span className="font-orbitron text-[8px] font-bold text-cyan-400 w-6 text-right leading-none">{chatHeight}vh</span>
+    </div>
+  );
+
   return (
     <div className="w-full h-screen flex flex-col relative z-10 overflow-hidden">
       <BrandingHeader
@@ -109,16 +131,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
 
         {/* ================================================
-            LEFT COLUMN
+            LEFT COLUMN (with Atmospheric/Weather Sensors and watermark)
         ================================================ */}
-        <div className="lg:col-span-3 flex flex-col space-y-3 overflow-y-auto custom-scrollbar">
-          <HologramPanel title="System Telemetry" subtitle="STARK_DIAGNOSTICS" showHeaderScan={scanning} className="flex-shrink-0">
-            <SystemStatus />
-          </HologramPanel>
+        <div className="lg:col-span-3 relative flex flex-col min-h-0">
+          {/* Background watermark */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.06] flex items-center justify-center z-0">
+            <img src="/stark_crest.png" alt="" className="w-64 h-64 object-contain filter drop-shadow-[0_0_25px_rgba(0,240,255,0.5)]" />
+          </div>
 
-          <HologramPanel title="HUD Shell Terminal" subtitle="STARK_CLI" showHeaderScan={scanning} className="flex-shrink-0">
-            <TerminalConsole onCommandTriggered={handleLocalCommand} />
-          </HologramPanel>
+          <div className="relative z-10 flex-1 flex flex-col space-y-3 overflow-y-auto custom-scrollbar">
+            <HologramPanel title="Atmospheric Sensors" subtitle="METEOROLOGICAL_TELEMETRY" showHeaderScan={scanning} className="flex-shrink-0">
+              <WeatherStatus />
+            </HologramPanel>
+
+            <HologramPanel title="System Telemetry" subtitle="STARK_DIAGNOSTICS" showHeaderScan={scanning} className="flex-shrink-0">
+              <SystemStatus />
+            </HologramPanel>
+
+            <HologramPanel title="HUD Shell Terminal" subtitle="STARK_CLI" showHeaderScan={scanning} className="flex-shrink-0">
+              <TerminalConsole onCommandTriggered={handleLocalCommand} />
+            </HologramPanel>
+          </div>
         </div>
 
         {/* ================================================
@@ -150,8 +183,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
             />
           </div>
 
-          {/* Center Chat Console - Made Large and Prominent */}
-          <HologramPanel title="OS Cognition Console" subtitle="JARVIS_COMMS" className="w-full h-[40vh] flex-shrink-0" showHeaderScan={scanning}>
+          {/* Center Chat Console - Adjustable Height */}
+          <HologramPanel
+            title="OS Cognition Console"
+            subtitle="JARVIS_COMMS"
+            className="w-full flex-shrink-0"
+            style={{ height: `${chatHeight}vh` }}
+            headerAction={chatHeightControl}
+            showHeaderScan={scanning}
+          >
             <ChatWindow
               nickname={customNickname}
               userAvatar={userAvatar}
@@ -166,53 +206,58 @@ export const Dashboard: React.FC<DashboardProps> = ({ nickname, userAvatar, onLo
         </div>
 
         {/* ================================================
-            RIGHT COLUMN
+            RIGHT COLUMN (with Settings and watermark)
         ================================================ */}
-        <div className="lg:col-span-3 flex flex-col space-y-3 overflow-y-auto custom-scrollbar">
-          
-          <HologramPanel title="System Parameters" subtitle="CONFIG_VARS" className="flex-shrink-0" showHeaderScan={scanning}>
-            <SettingsPanel
-              provider={provider}
-              setProvider={setProvider}
-              selectedModel={selectedModel}
-              setSelectedModel={setSelectedModel}
-              nickname={customNickname}
-              setNickname={setCustomNickname}
-              videoRef={videoRef}
-            />
-          </HologramPanel>
+        <div className="lg:col-span-3 relative flex flex-col min-h-0">
+          {/* Background watermark */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.06] flex items-center justify-center z-0">
+            <img src="/stark_crest.png" alt="" className="w-64 h-64 object-contain filter drop-shadow-[0_0_25px_rgba(0,240,255,0.5)]" />
+          </div>
 
-          {/* Arc Reactor power strip moved to right column to balance layout */}
-          <div className="w-full glass-panel rounded-md px-4 py-3 flex flex-col space-y-3 border border-cyan-500/10 mt-auto">
-            <div className="flex items-center space-x-3">
-              <ArcReactor power={arcPower} />
-              <div className="font-sharetech">
-                <div className="text-[10px] text-white tracking-[0.15em] font-bold uppercase">Arc Reactor Grid</div>
-                <div className="text-[7px] text-gray-500 tracking-widest">POWER MATRIX v4.02</div>
-                <div className="mt-1.5 w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: 'linear-gradient(90deg, #0066ff, #00f0ff)' }}
-                    animate={{ width: `${arcPower}%` }}
-                    transition={{ duration: 1 }}
-                  />
+          <div className="relative z-10 flex-1 flex flex-col space-y-3 overflow-y-auto custom-scrollbar">
+            <HologramPanel title="System Parameters" subtitle="CONFIG_VARS" className="flex-shrink-0" showHeaderScan={scanning}>
+              <SettingsPanel
+                provider={provider}
+                setProvider={setProvider}
+                selectedModel={selectedModel}
+                setSelectedModel={setSelectedModel}
+                nickname={customNickname}
+                setNickname={setCustomNickname}
+                videoRef={videoRef}
+              />
+            </HologramPanel>
+
+            {/* Arc Reactor power strip moved to right column to balance layout */}
+            <div className="w-full glass-panel rounded-md px-4 py-3 flex flex-col space-y-3 border border-cyan-500/10 mt-auto">
+              <div className="flex items-center space-x-3">
+                <ArcReactor power={arcPower} />
+                <div className="font-sharetech">
+                  <div className="text-[10px] text-white tracking-[0.15em] font-bold uppercase">Arc Reactor Grid</div>
+                  <div className="text-[7px] text-gray-500 tracking-widest">POWER MATRIX v4.02</div>
+                  <div className="mt-1.5 w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ background: 'linear-gradient(90deg, #0066ff, #00f0ff)' }}
+                      animate={{ width: `${arcPower}%` }}
+                      transition={{ duration: 1 }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="text-right font-sharetech flex items-end justify-between">
-              <div className="flex items-center space-x-1 mb-1">
-                <Battery className="w-3 h-3 text-green-400" />
-                <span className="text-[8px] text-green-400 font-bold">OPTIMAL</span>
-              </div>
-              <div>
-                <div className="text-[7px] text-gray-500 uppercase tracking-widest">Energy Output</div>
-                <div className="font-orbitron text-lg font-bold text-cyan-300 text-glow-cyan leading-none">
-                  {(arcPower * 10.4).toFixed(0)} <span className="text-[10px]">MW</span>
+              <div className="text-right font-sharetech flex items-end justify-between">
+                <div className="flex items-center space-x-1 mb-1">
+                  <Battery className="w-3 h-3 text-green-400" />
+                  <span className="text-[8px] text-green-400 font-bold">OPTIMAL</span>
+                </div>
+                <div>
+                  <div className="text-[7px] text-gray-500 uppercase tracking-widest">Energy Output</div>
+                  <div className="font-orbitron text-lg font-bold text-cyan-300 text-glow-cyan leading-none">
+                    {(arcPower * 10.4).toFixed(0)} <span className="text-[10px]">MW</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          
         </div>
 
       </main>

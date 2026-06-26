@@ -225,15 +225,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           </button>
         )}
 
-        {/* Text input */}
+        {/* Text area input */}
         <div className="flex-1 flex border border-cyan-500/18 bg-black/40 rounded-md overflow-hidden focus-within:border-cyan-400/50 focus-within:shadow-[0_0_10px_rgba(0,240,255,0.18)] transition-all">
-          <input
-            type="text" value={input} onChange={e => { setInput(e.target.value); playKeyboardClick(); }}
+          <textarea
+            value={input}
+            onChange={e => { setInput(e.target.value); playKeyboardClick(); }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
             placeholder={isListening ? 'Listening… or type here' : 'Ask JARVIS…'}
-            className="flex-1 bg-transparent px-3 py-2 text-[11px] text-white placeholder-gray-700 focus:outline-none font-sharetech select-text"
+            rows={1}
+            style={{ resize: 'vertical', minHeight: '32px', maxHeight: '150px' }}
+            className="flex-1 bg-transparent px-3 py-1.5 text-[11px] text-white placeholder-gray-700 focus:outline-none font-sharetech select-text custom-scrollbar"
           />
           <button type="submit" disabled={!input.trim()}
-            className="px-3 text-cyan-400 border-l border-cyan-500/15 hover:bg-cyan-400/12 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+            className="px-3 text-cyan-400 border-l border-cyan-500/15 hover:bg-cyan-400/12 disabled:opacity-25 disabled:pointer-events-none transition-colors flex items-center justify-center flex-shrink-0"
           >
             <Send className="w-3.5 h-3.5" />
           </button>
